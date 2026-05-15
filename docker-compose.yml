@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15.6-alpine
+    environment:
+      POSTGRES_USER: facturas
+      POSTGRES_PASSWORD: facturas123
+      POSTGRES_DB: facturas
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    ports:
+      - "8003:8000"
+    environment:
+      - DATABASE_URL=postgresql://facturas:facturas123@postgres:5432/facturas
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    depends_on:
+      - postgres
+    volumes:
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3004:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8003
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
